@@ -2,7 +2,7 @@
 
 ## Overview
 
-A comprehensive web platform for the Nairobi Taekwondo Association, serving as both a public-facing website and an administrative dashboard. The application enables the association to showcase their programs, manage events and announcements, and facilitate student registrations. Built with React, TypeScript, and Vite, the platform provides a modern, responsive experience for visitors while offering robust content management capabilities for administrators.
+A comprehensive frontend-only website for the Nairobi Taekwondo Association. Built with React, TypeScript, and Vite, the platform provides a modern, responsive experience showcasing the association's programs, coaches, events, and gallery - all without requiring a backend server.
 
 ## User Preferences
 
@@ -12,120 +12,195 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-The application uses a modern React-based single-page application (SPA) architecture:
+The application is a pure **frontend-only React single-page application (SPA)**:
 
 - **Framework**: React 18 with TypeScript for type safety
 - **Build Tool**: Vite for fast development and optimized production builds
-- **Routing**: React Router for client-side navigation
-- **State Management**: TanStack Query (React Query) for server state management
+- **Routing**: React Router DOM for client-side navigation
+- **State Management**: TanStack Query (React Query) for data state management
 - **UI Framework**: shadcn/ui components built on Radix UI primitives
 - **Styling**: Tailwind CSS with custom design system based on Taekwondo brand colors (Red #E63946, Black, White, Gold)
 - **Animations**: Framer Motion for smooth transitions and interactive elements
+- **Forms**: EmailJS for contact form submissions (no backend required)
 
-**Design Rationale**: Vite was chosen over Create React App for significantly faster hot module replacement during development. The shadcn/ui component library provides accessible, customizable components without the bundle size overhead of complete UI frameworks.
+**Design Rationale**: Vite was chosen for significantly faster hot module replacement during development. The shadcn/ui component library provides accessible, customizable components without the bundle size overhead of complete UI frameworks.
 
-### Backend Architecture
+### Data Management
 
-The application uses a dual-layer backend approach:
+All data is stored in **mock data files** (no database required):
 
-- **Development Server**: Express.js server that serves the Vite development environment
-- **Production**: Static file serving with pre-built React application
-- **Server Files**: Located in `/server` directory with minimal API routes (currently a placeholder structure)
+- **Location**: `src/lib/mockData.ts`
+- **Data Types**:
+  - Coaches: Profile information with photos and bios
+  - Events: Upcoming competitions, workshops, and grading ceremonies
+  - Announcements: News and updates for members
+  - Gallery Images: Training photos and tournament highlights
 
-**Current State**: The backend is minimal, with authentication and data management handled entirely through Firebase. The Express server primarily exists to support the development environment and could be expanded for custom API endpoints if needed.
-
-### Authentication & Authorization
-
-- **Provider**: Firebase Authentication
-- **Admin Access Control**: Firestore-based admin verification
-  - Admin emails stored in `admins` collection
-  - Protected routes check both Firebase auth session AND admin collection membership
-  - Login flow: Email/password → Firebase Auth → Firestore admin check → Dashboard access
-- **Password Reset**: Firebase-provided email-based password reset flow
-
-**Security Model**: Admin access requires TWO conditions: valid Firebase authentication AND existence in the `admins` Firestore collection. This two-tier approach prevents unauthorized users from accessing admin features even if they create Firebase accounts.
-
-### Database Schema
-
-Firebase Firestore with the following collections:
-
-1. **admins**: Stores admin email addresses (document ID = email)
-2. **coaches**: Coach profiles with name, role, bio, and photoUrl
-3. **events**: Upcoming events with title, date, time, location, description, category
-4. **announcements**: Site announcements with title, description, date, category
-5. **media**: Media files metadata (type, title, url, category)
-6. **gallery**: Gallery photos with url, caption, category, publicId
-7. **registrations**: (Implied from email service) Student registration data
-
-**Real-time Updates**: Firestore's `onSnapshot` API enables live data synchronization across all admin managers and public-facing pages.
-
-### File Storage
-
-- **Provider**: Firebase Storage
-- **Buckets**: Organized by content type (coaches photos, gallery media, general media)
-- **Access**: Public read access for visitor-facing content, authenticated write access for admins
-- **Upload Flow**: Direct browser uploads to Firebase Storage with URL references saved to Firestore
-
-**Migration Note**: The application previously used Cloudinary for media storage. All references have been removed and replaced with Firebase Storage.
+**Advantages**:
+- No backend infrastructure needed
+- Fast page loads and instant data access
+- Easy to update by editing the mock data file
+- No database costs or maintenance
 
 ### Email Notifications
 
-- **Provider**: EmailJS
+- **Provider**: EmailJS (client-side email service)
 - **Service ID**: `service_0ayo19h`
-- **Template**: `n3s5d4e`
+- **Template ID**: `n3s5d4e`
+- **Public Key**: `YG5OTMHMqPXhtbobk`
 - **Use Cases**: 
-  - New student registration alerts
-  - Contact form submissions
+  - Student registration form submissions
+  - Contact form messages
 - **Recipient**: Admin email (`telo18429@gmail.com`)
 
-**Implementation**: Client-side email sending through EmailJS browser SDK, bypassing the need for a backend email service.
+**Implementation**: Direct browser-to-EmailJS communication, eliminating the need for a backend email service.
+
+## Project Structure
+
+```
+├── src/
+│   ├── assets/          # Images and media files
+│   ├── components/      # Reusable React components
+│   │   └── ui/         # shadcn/ui components
+│   ├── hooks/          # Custom React hooks
+│   ├── lib/            # Utility functions and mock data
+│   │   └── mockData.ts # All application data
+│   ├── pages/          # Page components (routes)
+│   │   ├── classes/    # Class information pages
+│   │   ├── About.tsx
+│   │   ├── Coaches.tsx
+│   │   ├── Events.tsx
+│   │   ├── Gallery.tsx
+│   │   ├── Index.tsx
+│   │   ├── Join.tsx
+│   │   └── NotFound.tsx
+│   ├── App.tsx         # Main app with routing
+│   ├── main.tsx        # Application entry point
+│   └── index.css       # Global styles and Tailwind
+├── public/             # Static assets
+├── index.html          # HTML template
+├── vite.config.ts      # Vite configuration
+├── tailwind.config.ts  # Tailwind configuration
+└── package.json        # Dependencies and scripts
+```
 
 ## External Dependencies
-
-### Firebase Configuration
-
-- **Project ID**: `taekwondo-org-nrb`
-- **Auth Domain**: `taekwondo-org-nrb.firebaseapp.com`
-- **Storage Bucket**: `taekwondo-org-nrb.appspot.com`
-- **Services Used**:
-  - Authentication (email/password)
-  - Firestore Database
-  - Storage
-  - Analytics (optional, loaded conditionally)
-
-**Setup Requirements**: 
-- Firestore collections must be created manually via Firebase Console
-- Storage buckets require appropriate security rules (read: public, write: authenticated)
-- Email verification can be disabled in Firebase Auth settings for immediate admin access
-
-### EmailJS Integration
-
-- **Public Key**: `YG5OTMHMqPXhtbobk`
-- **Purpose**: Transactional email notifications for registrations and messages
-- **Alternative Considered**: Firebase Cloud Functions were considered but EmailJS was chosen for simplicity and zero backend requirements
 
 ### UI Component Library
 
 - **shadcn/ui**: Accessible component primitives from Radix UI
-- **Radix UI Packages**: Extensive use of headless UI components (Dialog, Dropdown, Toast, etc.)
+- **Radix UI Packages**: Headless UI components (Dialog, Dropdown, Toast, etc.)
 - **Lucide React**: Icon library for consistent iconography
+- **Tailwind CSS**: Utility-first CSS framework
+
+### Form & Email
+
+- **EmailJS Browser SDK**: Client-side email sending for forms
+- **React Hook Form**: Form state management
+- **Zod**: Schema validation for forms
 
 ### Development Tools
 
 - **ESLint**: Code linting with TypeScript support
-- **TypeScript**: Strict type checking disabled for rapid development (`noImplicitAny: false`)
+- **TypeScript**: Type checking
 - **PostCSS**: For Tailwind CSS processing
+- **Vite**: Build tool and dev server
 
-### Notable Architectural Decisions
+## Running the Project
 
-1. **No Drizzle/PostgreSQL**: Despite the presence of `drizzle-orm` and `drizzle-zod` in dependencies, the application exclusively uses Firebase Firestore. These packages may be legacy or planned for future migration.
+### Development
 
-2. **Monorepo Structure**: The repository uses a client-server separation with shared types in `/shared`, though the shared folder is currently minimal.
+```bash
+npm run dev
+```
 
-3. **Migration History**: The codebase shows evidence of migration from Firebase + Cloudinary to an attempted Supabase migration, then back to Firebase. Multiple configuration files (`.md` files) document these transitions.
+Starts the Vite development server on `http://localhost:5000`
 
-4. **Protected Routes**: Custom `ProtectedRoute` component wraps admin pages, checking Firebase auth state and Firestore admin status before rendering.
+### Production Build
 
-5. **Form Handling**: React Hook Form with Zod validation for type-safe form submissions.
+```bash
+npm run build
+```
 
-6. **Optimistic UI Updates**: TanStack Query's mutation handling provides immediate UI feedback with automatic rollback on errors.
+Creates an optimized production build in the `dist/` directory
+
+### Preview Production Build
+
+```bash
+npm run preview
+```
+
+Serves the production build locally for testing
+
+## Key Features
+
+### Public Pages
+
+1. **Home** (`/`) - Hero section, class overview, features
+2. **About** (`/about`) - Organization history and mission
+3. **Classes** - Detailed information about:
+   - Kids Classes (`/classes/kids`)
+   - Adult Classes (`/classes/adults`)
+   - Private Lessons (`/classes/private`)
+4. **Coaches** (`/coaches`) - Coach profiles with expandable details
+5. **Events** (`/events`) - Upcoming events and announcements
+6. **Gallery** (`/gallery`) - Photo gallery with category filters and lightbox
+7. **Join** (`/join`) - Registration form with EmailJS integration
+
+### Notable Features
+
+- **Responsive Design**: Mobile-first approach, works on all devices
+- **Dark/Light Mode**: Theme toggle with localStorage persistence
+- **Smooth Animations**: Framer Motion for page transitions and interactions
+- **Form Validation**: Client-side validation with Zod schemas
+- **Image Lightbox**: Full-screen image viewer in gallery
+- **SEO Optimized**: Meta tags, Open Graph, and Twitter cards
+
+## Data Updates
+
+To update website content, edit `src/lib/mockData.ts`:
+
+```typescript
+// Example: Adding a new event
+export const mockEvents: Event[] = [
+  {
+    id: "5",
+    title: "Summer Training Camp",
+    date: "2024-06-15",
+    time: "09:00 AM",
+    location: "Nairobi TKD Academy",
+    description: "Intensive summer training camp for all belt levels",
+    category: "Workshop",
+  },
+  // ... existing events
+];
+```
+
+## Deployment
+
+This frontend-only application can be deployed to any static hosting service:
+
+- **Vercel**: `vercel deploy`
+- **Netlify**: Connect GitHub repository or drag-and-drop `dist/` folder
+- **GitHub Pages**: Use GitHub Actions to build and deploy
+- **Cloudflare Pages**: Connect repository for automatic deployments
+
+No server configuration or environment variables needed (EmailJS credentials are public keys).
+
+## Migration History
+
+**Previous Setup**: Originally built with Firebase/Supabase backend for authentication and data storage
+
+**Current Setup** (as of Nov 2024): Migrated to frontend-only architecture
+- Removed: Firebase, Supabase, Express server, admin authentication
+- Replaced with: Mock data files, EmailJS for forms
+- Benefits: Simpler deployment, no backend costs, faster load times
+
+## Development Guidelines
+
+- **No Backend**: All functionality must work client-side only
+- **Mock Data**: Add new data to `src/lib/mockData.ts`
+- **TypeScript**: Use strict typing for all components
+- **Accessibility**: Follow WCAG guidelines, use semantic HTML
+- **Performance**: Optimize images, lazy load when appropriate
+- **Testing**: Manual testing across devices and browsers
