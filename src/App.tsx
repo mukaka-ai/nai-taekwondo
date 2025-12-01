@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
+
 import Index from "./pages/Index";
 import About from "./pages/About";
 import KidsClasses from "./pages/classes/Kids";
@@ -14,6 +15,8 @@ import Coaches from "./pages/Coaches";
 import Gallery from "./pages/Gallery";
 import Events from "./pages/Events";
 import Join from "./pages/Join";
+import Login from "./pages/Login";                // <-- IMPORTANT
+import AdminDashboard from "./pages/admin/AdminDashboard"; // <-- IMPORTANT
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +39,14 @@ const App = () => (
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/events" element={<Events />} />
             <Route path="/join" element={<Join />} />
+
+            {/* AUTH */}
+            <Route path="/login" element={<Login />} />
+
+            {/* ADMIN */}
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
+            {/* NOT FOUND */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
